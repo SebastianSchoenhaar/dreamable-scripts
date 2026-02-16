@@ -188,7 +188,7 @@
         var res = await fetch(RATE_WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, rating: selectedRating, rating_comment: (commentBox.value || "").trim() }) });
         if (res.ok) {
           try { localStorage.setItem(storageKey, "1"); } catch (e) {}
-          starsRow.style.display = "none"; commentBox.style.display = "none"; submitBtn.style.display = "none";
+          starsRow.style.cssText = "display:none!important"; commentBox.style.cssText = "display:none!important"; submitBtn.style.cssText = "display:none!important";
           var label = section.querySelector(".dm-rating-label"); if (label) label.style.display = "none";
           var sublabel = section.querySelector(".dm-rating-sublabel"); if (sublabel) sublabel.style.display = "none";
           thanksEl.classList.add("visible");
