@@ -457,8 +457,19 @@
       observer.observe(target, { attributes: true, attributeFilter: ["hidden", "style"] });
       // Check auch sofort falls schon sichtbar
       if (!target.hidden) {
-        setTimeout(() => observer.disconnect() || observer.observe(target, { attributes: true }), 100);
+    // Story ist bereits sichtbar → sofort injizieren
+    const worlds = ["aa", "kp", "sb"];
+    for (const w of worlds) {
+      const worldEl = document.getElementById("world-" + w);
+      if (worldEl && !worldEl.hidden && worldEl.offsetParent !== null) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const requestId = urlParams.get("t") || urlParams.get("token") || "";
+        const childName = "";
+        injectShareAndRating(w, childName, requestId);
+        break;
       }
+    }
+}
     } else {
       setTimeout(startObserver, 500);
     }
