@@ -22,7 +22,13 @@
 
   /* ---------- CSS injection (once) ---------- */
   const STYLE = `
-    .dm-share-rating { margin-top: 28px; }
+    .dm-share-rating {
+      margin-top: 28px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 0 20px;
+    }
 
     /* ---- SHARE SECTION ---- */
     .dm-share { margin-bottom: 28px; }
@@ -140,40 +146,40 @@
   function buildShareText(childName) {
     const name = (childName || "").trim();
     if (name) {
-      return `Schau mal! ${name} hat gerade ein magisches Abenteuer erlebt! ✨🌙 Erstelle auch eine personalisierte Geschichte für dein Kind: ${DREAMABLE_URL}?utm_source=share`;
+      return "Schau mal! " + name + " hat gerade ein magisches Abenteuer erlebt! \u2728\uD83C\uDF19 Erstelle auch eine personalisierte Geschichte f\u00FCr dein Kind: " + DREAMABLE_URL + "?utm_source=share";
     }
-    return `Schau mal! Mein Kind hat gerade ein magisches Abenteuer erlebt! ✨🌙 Erstelle auch eine personalisierte Geschichte für dein Kind: ${DREAMABLE_URL}?utm_source=share`;
+    return "Schau mal! Mein Kind hat gerade ein magisches Abenteuer erlebt! \u2728\uD83C\uDF19 Erstelle auch eine personalisierte Geschichte f\u00FCr dein Kind: " + DREAMABLE_URL + "?utm_source=share";
   }
 
   function buildEmailSubject(childName) {
     const name = (childName || "").trim();
-    if (name) return `${name} hat ein magisches Abenteuer erlebt! ✨`;
-    return `Mein Kind hat ein magisches Abenteuer erlebt! ✨`;
+    if (name) return name + " hat ein magisches Abenteuer erlebt! \u2728";
+    return "Mein Kind hat ein magisches Abenteuer erlebt! \u2728";
   }
 
   function buildEmailBody(childName) {
     const name = (childName || "").trim();
-    const intro = name
-      ? `Hallo!\n\n${name} hat gerade eine wunderschöne, personalisierte Geschichte erlebt – erstellt von Dreamable.`
-      : `Hallo!\n\nMein Kind hat gerade eine wunderschöne, personalisierte Geschichte erlebt – erstellt von Dreamable.`;
-    return `${intro}\n\nDreamable erstellt magische Geschichten, in denen dein Kind der Held ist. Jede Geschichte ist einzigartig und wird speziell für dein Kind erstellt.\n\nProbier es aus: ${DREAMABLE_URL}?utm_source=share&utm_medium=email\n\nViele Grüße!`;
+    var intro = name
+      ? "Hallo!\n\n" + name + " hat gerade eine wundersch\u00F6ne, personalisierte Geschichte erlebt \u2013 erstellt von Dreamable."
+      : "Hallo!\n\nMein Kind hat gerade eine wundersch\u00F6ne, personalisierte Geschichte erlebt \u2013 erstellt von Dreamable.";
+    return intro + "\n\nDreamable erstellt magische Geschichten, in denen dein Kind der Held ist. Jede Geschichte ist einzigartig und wird speziell f\u00FCr dein Kind erstellt.\n\nProbier es aus: " + DREAMABLE_URL + "?utm_source=share&utm_medium=email\n\nViele Gr\u00FC\u00DFe!";
   }
 
   /* ---------- build share UI ---------- */
   function buildShareSection(childName) {
-    const section = ce("div", { class: "dm-share" });
+    var section = ce("div", { class: "dm-share" });
 
     section.appendChild(
       ce("span", { class: "dm-share-label", textContent: "Geschichte teilen" })
     );
 
-    const btnRow = ce("div", { class: "dm-share-buttons" });
-    const shareText = buildShareText(childName);
-    const shareUrl = `${DREAMABLE_URL}?utm_source=share`;
+    var btnRow = ce("div", { class: "dm-share-buttons" });
+    var shareText = buildShareText(childName);
+    var shareUrl = DREAMABLE_URL + "?utm_source=share";
 
     // 1) WhatsApp
-    const waUrl = "https://wa.me/?text=" + encodeURIComponent(shareText);
-    const waBtn = ce("a", {
+    var waUrl = "https://wa.me/?text=" + encodeURIComponent(shareText);
+    var waBtn = ce("a", {
       class: "dm-share-btn dm-share-btn--wa",
       href: waUrl,
       target: "_blank",
@@ -183,10 +189,10 @@
     btnRow.appendChild(waBtn);
 
     // 2) E-Mail
-    const emailUrl = "mailto:?subject=" +
+    var emailUrl = "mailto:?subject=" +
       encodeURIComponent(buildEmailSubject(childName)) +
       "&body=" + encodeURIComponent(buildEmailBody(childName));
-    const emailBtn = ce("a", {
+    var emailBtn = ce("a", {
       class: "dm-share-btn dm-share-btn--email",
       href: emailUrl,
       innerHTML: ICON_EMAIL + " E-Mail"
@@ -195,15 +201,15 @@
 
     // 3) Native Share (mobile: zeigt Instagram, TikTok, Pinterest etc.)
     if (navigator.share) {
-      const nativeBtn = ce("button", {
+      var nativeBtn = ce("button", {
         class: "dm-share-btn dm-share-btn--native",
         innerHTML: ICON_SHARE + " Mehr teilen",
         onclick: async function () {
           try {
             await navigator.share({
               title: childName
-                ? `${childName}s magisches Abenteuer – Dreamable`
-                : "Ein magisches Abenteuer – Dreamable",
+                ? childName + "s magisches Abenteuer \u2013 Dreamable"
+                : "Ein magisches Abenteuer \u2013 Dreamable",
               text: shareText,
               url: shareUrl
             });
@@ -215,25 +221,24 @@
       btnRow.appendChild(nativeBtn);
     }
 
-    // 4) Link kopieren (Desktop-Fallback + generell nützlich)
-    const copiedSpan = ce("span", { class: "dm-share-copied", textContent: "Kopiert!" });
-    const copyBtn = ce("button", {
+    // 4) Link kopieren
+    var copiedSpan = ce("span", { class: "dm-share-copied", textContent: "Kopiert!" });
+    var copyBtn = ce("button", {
       class: "dm-share-btn dm-share-btn--copy",
       innerHTML: ICON_COPY + " Link kopieren",
       onclick: function () {
-        navigator.clipboard.writeText(shareUrl).then(() => {
+        navigator.clipboard.writeText(shareUrl).then(function() {
           copiedSpan.classList.add("visible");
-          setTimeout(() => copiedSpan.classList.remove("visible"), 2000);
-        }).catch(() => {
-          // Fallback für ältere Browser
-          const ta = ce("textarea", { style: { position: "fixed", opacity: "0" } });
+          setTimeout(function() { copiedSpan.classList.remove("visible"); }, 2000);
+        }).catch(function() {
+          var ta = ce("textarea", { style: { position: "fixed", opacity: "0" } });
           ta.value = shareUrl;
           document.body.appendChild(ta);
           ta.select();
           document.execCommand("copy");
           document.body.removeChild(ta);
           copiedSpan.classList.add("visible");
-          setTimeout(() => copiedSpan.classList.remove("visible"), 2000);
+          setTimeout(function() { copiedSpan.classList.remove("visible"); }, 2000);
         });
       }
     });
@@ -246,19 +251,21 @@
 
   /* ---------- build rating UI ---------- */
   function buildRatingSection(requestId) {
-    const section = ce("div", { class: "dm-rating" });
-    let selectedRating = 0;
+    var section = ce("div", { class: "dm-rating" });
+    var selectedRating = 0;
 
     // check localStorage if already rated
-    const storageKey = "dm_rated_" + (requestId || "unknown");
-    if (localStorage.getItem(storageKey)) {
-      const thanks = ce("div", {
-        class: "dm-rating-thanks visible",
-        textContent: "Danke für deine Bewertung! ⭐"
-      });
-      section.appendChild(thanks);
-      return section;
-    }
+    var storageKey = "dm_rated_" + (requestId || "unknown");
+    try {
+      if (localStorage.getItem(storageKey)) {
+        var thanks = ce("div", {
+          class: "dm-rating-thanks visible",
+          textContent: "Danke f\u00FCr deine Bewertung! \u2B50"
+        });
+        section.appendChild(thanks);
+        return section;
+      }
+    } catch(e) {}
 
     section.appendChild(
       ce("span", { class: "dm-rating-label", textContent: "Wie hat euch die Geschichte gefallen?" })
@@ -268,64 +275,67 @@
     );
 
     // Stars
-    const starsRow = ce("div", { class: "dm-stars" });
-    const stars = [];
+    var starsRow = ce("div", { class: "dm-stars" });
+    var stars = [];
 
-    for (let i = 1; i <= 5; i++) {
-      const star = ce("div", {
-        class: "dm-star",
-        innerHTML: ICON_STAR,
-        "data-value": String(i)
-      });
-      star.querySelector("svg").classList.add("dm-star");
-      star.style.display = "inline-block";
+    for (var i = 1; i <= 5; i++) {
+      (function(idx) {
+        var star = ce("div", {
+          class: "dm-star",
+          innerHTML: ICON_STAR,
+          "data-value": String(idx)
+        });
+        var svg = star.querySelector("svg");
+        if (svg) svg.classList.add("dm-star");
+        star.style.display = "inline-block";
 
-      star.onmouseenter = () => {
-        stars.forEach((s, idx) => {
-          const svg = s.querySelector("svg") || s;
-          if (idx < i) svg.classList.add("hover-preview");
-          else svg.classList.remove("hover-preview");
-        });
-      };
-      star.onmouseleave = () => {
-        stars.forEach(s => {
-          const svg = s.querySelector("svg") || s;
-          svg.classList.remove("hover-preview");
-        });
-      };
-      star.onclick = () => {
-        selectedRating = i;
-        stars.forEach((s, idx) => {
-          const svg = s.querySelector("svg") || s;
-          if (idx < i) { svg.classList.add("active"); svg.classList.remove("hover-preview"); }
-          else { svg.classList.remove("active"); svg.classList.remove("hover-preview"); }
-        });
-        submitBtn.disabled = false;
-      };
+        star.onmouseenter = function() {
+          stars.forEach(function(s, j) {
+            var sv = s.querySelector("svg") || s;
+            if (j < idx) sv.classList.add("hover-preview");
+            else sv.classList.remove("hover-preview");
+          });
+        };
+        star.onmouseleave = function() {
+          stars.forEach(function(s) {
+            var sv = s.querySelector("svg") || s;
+            sv.classList.remove("hover-preview");
+          });
+        };
+        star.onclick = function() {
+          selectedRating = idx;
+          stars.forEach(function(s, j) {
+            var sv = s.querySelector("svg") || s;
+            if (j < idx) { sv.classList.add("active"); sv.classList.remove("hover-preview"); }
+            else { sv.classList.remove("active"); sv.classList.remove("hover-preview"); }
+          });
+          submitBtn.disabled = false;
+        };
 
-      stars.push(star);
-      starsRow.appendChild(star);
+        stars.push(star);
+        starsRow.appendChild(star);
+      })(i);
     }
     section.appendChild(starsRow);
 
     // Comment
-    const commentBox = ce("textarea", {
+    var commentBox = ce("textarea", {
       class: "dm-comment-box",
-      placeholder: "Optional: Was hat euch besonders gefallen? Was können wir besser machen?"
+      placeholder: "Optional: Was hat euch besonders gefallen? Was k\u00F6nnen wir besser machen?"
     });
     section.appendChild(commentBox);
 
     // Submit
-    const submitBtn = ce("button", {
+    var submitBtn = ce("button", {
       class: "dm-rating-submit",
       textContent: "Bewertung absenden",
       disabled: "true"
     });
 
     // Thanks message (hidden initially)
-    const thanksEl = ce("div", {
+    var thanksEl = ce("div", {
       class: "dm-rating-thanks",
-      textContent: "Vielen Dank für deine Bewertung! ⭐ Das hilft uns sehr."
+      textContent: "Vielen Dank f\u00FCr deine Bewertung! \u2B50 Das hilft uns sehr."
     });
     section.appendChild(thanksEl);
 
@@ -333,10 +343,10 @@
       if (!selectedRating || !requestId) return;
 
       submitBtn.disabled = true;
-      submitBtn.textContent = "Wird gesendet …";
+      submitBtn.textContent = "Wird gesendet \u2026";
 
       try {
-        const res = await fetch(RATE_WEBHOOK_URL, {
+        var res = await fetch(RATE_WEBHOOK_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -346,17 +356,14 @@
           })
         });
 
-        // Akzeptiere jede 2xx Antwort als Erfolg
         if (res.ok || res.status === 200 || res.status === 202) {
-          // Speichere in localStorage, dass diese Story bereits bewertet wurde
           try { localStorage.setItem(storageKey, "1"); } catch (e) {}
 
-          // UI: verstecke Eingabe, zeige Danke
           starsRow.style.display = "none";
           commentBox.style.display = "none";
           submitBtn.style.display = "none";
-          const label = section.querySelector(".dm-rating-label");
-          const sublabel = section.querySelector(".dm-rating-sublabel");
+          var label = section.querySelector(".dm-rating-label");
+          var sublabel = section.querySelector(".dm-rating-sublabel");
           if (label) label.style.display = "none";
           if (sublabel) sublabel.style.display = "none";
           thanksEl.classList.add("visible");
@@ -376,32 +383,32 @@
   }
 
   /* ---------- MAIN: inject into story output ---------- */
-  // This function is called by the story output script after rendering
-  // We expose it globally so it can be called, OR we use a MutationObserver
+  // ✅ KEY FIX: inject OUTSIDE the world wrapper (into state-story)
+  // to avoid overflow:hidden clipping from world sections
   function injectShareAndRating(worldKey, childName, requestId) {
-    const containerId = worldKey + "-share-rating-container";
-    let container = document.getElementById(containerId);
+    var containerId = "dm-share-rating-global";
+    var container = document.getElementById(containerId);
 
-    // Fallback: wenn kein Webflow-Container existiert, hängen wir
-    // ans Ende des world-Wrappers an
-    if (!container) {
-      const worldWrapper = document.getElementById("world-" + worldKey);
-      if (worldWrapper) {
-        container = ce("div", { id: containerId });
-        worldWrapper.appendChild(container);
-      }
-    }
+    // Prevent double injection
+    if (container && container.dataset.injected === "true") return;
 
-    if (!container) {
-      console.warn("[ShareRating] No container found for world:", worldKey);
+    // ✅ FIX: Insert into state-story directly, AFTER the world section
+    // This avoids overflow:hidden on world-aa, world-kp, world-sb
+    var stateStory = document.getElementById("state-story");
+    if (!stateStory) {
+      console.warn("[ShareRating] No state-story element found");
       return;
     }
 
-    // Verhindere Doppel-Injection
-    if (container.dataset.injected === "true") return;
+    if (!container) {
+      container = ce("div", { id: containerId });
+      // Append to state-story (outside any world wrapper)
+      stateStory.appendChild(container);
+    }
+
     container.dataset.injected = "true";
 
-    const wrapper = ce("div", { class: "dm-share-rating" });
+    var wrapper = ce("div", { class: "dm-share-rating" });
 
     // 1) Share
     wrapper.appendChild(buildShareSection(childName));
@@ -410,66 +417,55 @@
     wrapper.appendChild(ce("hr", { class: "dm-divider" }));
 
     // 3) Rating
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get("t") || urlParams.get("token") || requestId || "";
+    var urlParams = new URLSearchParams(window.location.search);
+    var token = urlParams.get("t") || urlParams.get("token") || requestId || "";
     wrapper.appendChild(buildRatingSection(token));
 
     container.appendChild(wrapper);
+    console.log("[ShareRating] Injected successfully into state-story");
   }
 
   // Expose globally so the main script can call it
   window.__dreamableInjectShareRating = injectShareAndRating;
 
   /* ---------- AUTO-DETECT: observe state-story visibility ---------- */
-  // Falls die Hauptskript-Integration nicht manuell gemacht wird,
-  // beobachten wir automatisch wann state-story sichtbar wird
-  const observer = new MutationObserver(() => {
-    const storyState = document.getElementById("state-story");
+  var observer = new MutationObserver(function() {
+    var storyState = document.getElementById("state-story");
     if (!storyState || storyState.hidden) return;
 
-    // Finde die sichtbare Welt
-    const worlds = ["aa", "kp", "sb"];
-    for (const w of worlds) {
-      const worldEl = document.getElementById("world-" + w);
+    var worlds = ["aa", "kp", "sb"];
+    for (var i = 0; i < worlds.length; i++) {
+      var w = worlds[i];
+      var worldEl = document.getElementById("world-" + w);
       if (worldEl && !worldEl.hidden && worldEl.offsetParent !== null) {
-        // Child-Name aus dem Titel extrahieren
-        const titleEl = document.getElementById(w + "-story-title");
-        const titleText = titleEl ? titleEl.textContent : "";
-
-        // request_id aus URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const requestId = urlParams.get("t") || urlParams.get("token") || "";
-
-        // Child-Name: wir versuchen es aus dem URL oder lassen es leer
-        // (der Share-Text funktioniert auch ohne)
-        const childName = ""; // wird ggf. vom Hauptscript übergeben
-
+        var urlParams = new URLSearchParams(window.location.search);
+        var requestId = urlParams.get("t") || urlParams.get("token") || "";
+        var childName = "";
         injectShareAndRating(w, childName, requestId);
         break;
       }
     }
   });
 
-  // Starte Observer sobald DOM ready
   function startObserver() {
-    const target = document.getElementById("state-story");
+    var target = document.getElementById("state-story");
     if (target) {
       observer.observe(target, { attributes: true, attributeFilter: ["hidden", "style"] });
-      // Check auch sofort falls schon sichtbar
+      // Check immediately if story is already visible
       if (!target.hidden) {
-    // Story ist bereits sichtbar → sofort injizieren
-    const worlds = ["aa", "kp", "sb"];
-    for (const w of worlds) {
-      const worldEl = document.getElementById("world-" + w);
-      if (worldEl && !worldEl.hidden && worldEl.offsetParent !== null) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const requestId = urlParams.get("t") || urlParams.get("token") || "";
-        const childName = "";
-        injectShareAndRating(w, childName, requestId);
-        break;
+        var worlds = ["aa", "kp", "sb"];
+        for (var i = 0; i < worlds.length; i++) {
+          var w = worlds[i];
+          var worldEl = document.getElementById("world-" + w);
+          if (worldEl && !worldEl.hidden && worldEl.offsetParent !== null) {
+            var urlParams = new URLSearchParams(window.location.search);
+            var requestId = urlParams.get("t") || urlParams.get("token") || "";
+            var childName = "";
+            injectShareAndRating(w, childName, requestId);
+            break;
+          }
+        }
       }
-    }
-}
     } else {
       setTimeout(startObserver, 500);
     }
