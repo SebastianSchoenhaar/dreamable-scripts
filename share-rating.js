@@ -5,7 +5,7 @@
 
   function ce(tag, attrs, children) {
     var el = document.createElement(tag);
-    if (attrs) Object.entries(attrs).forEach(function(kv) {
+    if (attrs) Object.entrie.;s(attrs).forEach(function(kv) {.dm-hidden{display:none!important;visibility:hidden!important;height:0!important;overflow:hidden!important}.dm-rating-thanks{display:none;
       var k = kv[0], v = kv[1];
       if (k === "style" && typeof v === "object") Object.assign(el.style, v);
       else if (k === "textContent") el.textContent = v;
@@ -188,9 +188,9 @@
         var res = await fetch(RATE_WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, rating: selectedRating, rating_comment: (commentBox.value || "").trim() }) });
         if (res.ok) {
           try { localStorage.setItem(storageKey, "1"); } catch (e) {}
-          starsRow.style.cssText = "display:none!important"; commentBox.style.cssText = "display:none!important"; submitBtn.style.cssText = "display:none!important";
-          var label = section.querySelector(".dm-rating-label"); if (label) label.style.display = "none";
-          var sublabel = section.querySelector(".dm-rating-sublabel"); if (sublabel) sublabel.style.display = "none";
+          starsRow.classList.add("dm-hidden"); commentBox.classList.add("dm-hidden"); submitBtn.classList.add("dm-hidden");submitBtn.style.cssText = "display:none!important";
+          var label = section.querySelector(".dm-rating-label"); if (label) label.classList.add("dm-hidden");
+          var sublabel = section.querySelector(".dm-rating-sublabel"); if (sublabel) sublabel.classList.add("dm-hidden");
           thanksEl.classList.add("visible");
         } else { submitBtn.textContent = "Nochmal versuchen"; submitBtn.disabled = false; }
       } catch (err) { console.warn("[Rating]", err); submitBtn.textContent = "Nochmal versuchen"; submitBtn.disabled = false; }
