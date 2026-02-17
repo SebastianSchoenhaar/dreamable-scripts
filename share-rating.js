@@ -5,7 +5,7 @@
 
   function ce(tag, attrs, children) {
     var el = document.createElement(tag);
-    if (attrs) Object.entrie.;s(attrs).forEach(function(kv) {.dm-hidden{display:none!important;visibility:hidden!important;height:0!important;overflow:hidden!important}.dm-rating-thanks{display:none;
+    if (attrs) Object.entries(attrs).forEach(function(kv) {
       var k = kv[0], v = kv[1];
       if (k === "style" && typeof v === "object") Object.assign(el.style, v);
       else if (k === "textContent") el.textContent = v;
@@ -34,6 +34,7 @@
     + '.dm-share-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 20px;border-radius:24px;font-size:14px;font-weight:500;opacity:0;transition:all .3s ease;z-index:99999;pointer-events:none}'
     + '.dm-share-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}'
     + '.dm-divider{border:none;border-top:1px solid #eee;margin:24px 0;display:block!important}'
+    + '.dm-hidden{display:none!important;visibility:hidden!important;height:0!important;overflow:hidden!important}'
     + '.dm-rating{display:block!important;visibility:visible!important}'
     + '.dm-rating-label{font-size:15px;font-weight:600;color:#333;margin-bottom:8px;display:block!important}'
     + '.dm-rating-sublabel{font-size:13px;color:#888;margin-bottom:14px;display:block!important}'
@@ -188,7 +189,9 @@
         var res = await fetch(RATE_WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, rating: selectedRating, rating_comment: (commentBox.value || "").trim() }) });
         if (res.ok) {
           try { localStorage.setItem(storageKey, "1"); } catch (e) {}
-          starsRow.classList.add("dm-hidden"); commentBox.classList.add("dm-hidden"); submitBtn.classList.add("dm-hidden");submitBtn.style.cssText = "display:none!important";
+          starsRow.classList.add("dm-hidden");
+          commentBox.classList.add("dm-hidden");
+          submitBtn.classList.add("dm-hidden");
           var label = section.querySelector(".dm-rating-label"); if (label) label.classList.add("dm-hidden");
           var sublabel = section.querySelector(".dm-rating-sublabel"); if (sublabel) sublabel.classList.add("dm-hidden");
           thanksEl.classList.add("visible");
