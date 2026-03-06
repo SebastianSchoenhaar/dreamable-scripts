@@ -1,4 +1,10 @@
-//Rate & Share button script v6 - passive (called by showStory)
+//Rate & Share button script v7 - passive (called by showStory)
+// Changes from v6:
+// - 3 share text variants (proud, screenfree, tired) instead of generic text
+// - Story title included in share text
+// - UTM tracking per variant (utm_content=proud/screenfree/tired)
+// - Bottom sheet UI on mobile instead of instant native share
+// - Updated function signature: injectShareAndRating(worldKey, childName, requestId, storyTitle)
 (function () {
   var RATE_WEBHOOK_URL = "https://hook.eu2.make.com/7touay6xs4s7ixo9rxn8hr9tyn8dp4gi";
   var DREAMABLE_URL = "https://dreamable-mvp.webflow.io";
@@ -24,15 +30,29 @@
     + '.dm-share-main-btn{display:inline-flex!important;align-items:center;gap:8px;padding:12px 24px;border-radius:28px;font-size:15px;font-weight:600;text-decoration:none;cursor:pointer;border:2px solid #5856d6;background:#5856d6;color:#fff;transition:all .2s ease;font-family:inherit;visibility:visible!important;opacity:1!important}'
     + '.dm-share-main-btn:hover{background:#4745b5;border-color:#4745b5;transform:translateY(-1px);box-shadow:0 4px 12px rgba(88,86,214,.3)}'
     + '.dm-share-main-btn svg{width:20px;height:20px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}'
-    + '.dm-share-dropdown{display:none;position:absolute;bottom:calc(100% + 8px);left:0;background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.15);border:1px solid #e8e8e8;padding:8px;z-index:10000;min-width:220px}'
-    + '.dm-share-dropdown.open{display:block!important}'
-    + '.dm-share-dropdown-item{display:flex!important;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;border:none;background:transparent;color:#333;transition:background .15s;font-family:inherit;width:100%;text-align:left;visibility:visible!important}'
-    + '.dm-share-dropdown-item:hover{background:#f5f5f5}'
-    + '.dm-share-dropdown-item svg{width:20px;height:20px;flex-shrink:0}'
-    + '.dm-share-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999}'
-    + '.dm-share-overlay.open{display:block}'
+    // Bottom sheet (mobile + desktop fallback)
+    + '.dm-share-sheet-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:99998;opacity:0;transition:opacity .25s ease}'
+    + '.dm-share-sheet-overlay.open{display:block;opacity:1}'
+    + '.dm-share-sheet{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,.15);z-index:99999;padding:20px 20px 32px;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}'
+    + '.dm-share-sheet.open{display:block;transform:translateY(0)}'
+    + '.dm-share-sheet-handle{width:36px;height:4px;background:#ddd;border-radius:4px;margin:0 auto 16px}'
+    + '.dm-share-sheet-title{font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:4px}'
+    + '.dm-share-sheet-sub{font-size:13px;color:#888;margin-bottom:16px}'
+    + '.dm-share-variant{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:14px;cursor:pointer;border:1.5px solid #eee;background:#fafafa;margin-bottom:10px;transition:all .15s ease;text-align:left;width:100%}'
+    + '.dm-share-variant:hover{border-color:#5856d6;background:#f8f7ff}'
+    + '.dm-share-variant:active{transform:scale(.98)}'
+    + '.dm-share-variant-emoji{font-size:24px;flex-shrink:0;line-height:1}'
+    + '.dm-share-variant-text{flex:1}'
+    + '.dm-share-variant-label{font-size:14px;font-weight:600;color:#333;margin-bottom:2px}'
+    + '.dm-share-variant-preview{font-size:12px;color:#888;line-height:1.4}'
+    + '.dm-share-channels{display:flex;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid #eee}'
+    + '.dm-share-channel-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid #eee;background:#fff;color:#333;transition:all .15s}'
+    + '.dm-share-channel-btn:hover{border-color:#5856d6;background:#f8f7ff}'
+    + '.dm-share-channel-btn svg{width:18px;height:18px;flex-shrink:0}'
+    // Toast
     + '.dm-share-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 20px;border-radius:24px;font-size:14px;font-weight:500;opacity:0;transition:all .3s ease;z-index:99999;pointer-events:none}'
     + '.dm-share-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}'
+    // Divider + rating (unchanged from v6)
     + '.dm-divider{border:none;border-top:1px solid #eee;margin:24px 0;display:block!important}'
     + '.dm-hidden{display:none!important;visibility:hidden!important;height:0!important;overflow:hidden!important}'
     + '.dm-rating{display:block!important;visibility:visible!important}'
@@ -58,18 +78,63 @@
   var ICON_COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
   var ICON_STAR = '<svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
 
-  // ===== Text builders =====
-  function buildShareText(cn) {
-    var n=(cn||"").trim();
-    return n
-      ? "Schau mal! "+n+" hat gerade ein magisches Abenteuer erlebt! \u2728\uD83C\uDF19 Erstelle auch eine personalisierte Geschichte f\u00FCr dein Kind: "+DREAMABLE_URL+"?utm_source=share"
-      : "Schau mal! Mein Kind hat gerade ein magisches Abenteuer erlebt! \u2728\uD83C\uDF19 Erstelle auch eine personalisierte Geschichte f\u00FCr dein Kind: "+DREAMABLE_URL+"?utm_source=share";
-  }
-  function buildEmailSubject(cn) { var n=(cn||"").trim(); return n ? n+" hat ein magisches Abenteuer erlebt! \u2728" : "Mein Kind hat ein magisches Abenteuer erlebt! \u2728"; }
-  function buildEmailBody(cn) {
-    var n=(cn||"").trim();
-    var intro = n ? "Hallo!\n\n"+n+" hat gerade eine wundersch\u00F6ne, personalisierte Geschichte erlebt \u2013 erstellt von Dreamable." : "Hallo!\n\nMein Kind hat gerade eine wundersch\u00F6ne, personalisierte Geschichte erlebt \u2013 erstellt von Dreamable.";
-    return intro+"\n\nDreamable erstellt magische Geschichten, in denen dein Kind der Held ist.\n\nProbier es aus: "+DREAMABLE_URL+"?utm_source=share&utm_medium=email\n\nViele Gr\u00FC\u00DFe!";
+  // ===== Share text variants =====
+  function buildShareVariants(childName, storyTitle) {
+    var n = (childName || "").trim();
+    var t = (storyTitle || "").trim();
+    var displayName = n || "mein Kind";
+
+    return [
+      {
+        key: "proud",
+        emoji: "\uD83D\uDCD6",
+        label: "Geschichte teilen",
+        text: (t ? "\u201E" + t + "\u201C \u2014 " : "")
+            + "Eine Geschichte nur f\u00FCr " + displayName
+            + ", mit echtem Namen, echten Orten und echten Freunden! \uD83C\uDF1F\n"
+            + DREAMABLE_URL + "?utm_source=share&utm_medium=whatsapp&utm_content=proud",
+        emailSubject: (t ? t + " \u2014 " : "") + "Eine personalisierte Geschichte f\u00FCr " + displayName + "! \uD83C\uDF1F",
+        emailBody: "Hallo!\n\n"
+            + (t ? 'Wir haben gerade "' + t + '" erstellt \u2014 ' : "Wir haben gerade ")
+            + "eine personalisierte Geschichte, in der " + displayName + " der Held ist.\n\n"
+            + "Dreamable erstellt einzigartige Geschichten mit echtem Namen, echten Orten und echten Freunden deines Kindes.\n\n"
+            + "Probier es kostenlos aus: " + DREAMABLE_URL + "?utm_source=share&utm_medium=email&utm_content=proud\n\n"
+            + "Viele Gr\u00FC\u00DFe!",
+        copyUrl: DREAMABLE_URL + "?utm_source=share&utm_medium=copy&utm_content=proud"
+      },
+      {
+        key: "screenfree",
+        emoji: "\uD83D\uDCF5",
+        label: "Bildschirmfrei-Tipp teilen",
+        text: "Wir haben eine Alternative zu Bildschirmzeit entdeckt: personalisierte H\u00F6rgeschichten, in denen "
+            + displayName + " der Held ist. Bildschirmfrei & perfekt zum Einschlafen \uD83D\uDCA4\n"
+            + DREAMABLE_URL + "?utm_source=share&utm_medium=whatsapp&utm_content=screenfree",
+        emailSubject: "Bildschirmfrei-Tipp: Personalisierte H\u00F6rgeschichten \uD83D\uDCA4",
+        emailBody: "Hallo!\n\n"
+            + "Wir haben eine tolle Alternative zu Bildschirmzeit entdeckt: Dreamable erstellt personalisierte H\u00F6rgeschichten, in denen "
+            + displayName + " der Held ist.\n\n"
+            + "Komplett bildschirmfrei, perfekt zum Einschlafen, und jede Geschichte ist einzigartig.\n\n"
+            + "Probier es kostenlos aus: " + DREAMABLE_URL + "?utm_source=share&utm_medium=email&utm_content=screenfree\n\n"
+            + "Viele Gr\u00FC\u00DFe!",
+        copyUrl: DREAMABLE_URL + "?utm_source=share&utm_medium=copy&utm_content=screenfree"
+      },
+      {
+        key: "tired",
+        emoji: "\uD83D\uDE05",
+        label: "Eltern-Tipp teilen",
+        text: "Wenn dein Kind auch zum 100. Mal dieselbe Geschichte h\u00F6ren will: "
+            + "Dreamable erstellt jedes Mal eine neue, personalisierte Geschichte mit deinem Kind als Held. "
+            + "Echte Rettung f\u00FCr m\u00FCde Eltern \uD83D\uDE05\n"
+            + DREAMABLE_URL + "?utm_source=share&utm_medium=whatsapp&utm_content=tired",
+        emailSubject: "Nie wieder dieselbe Geschichte 100x vorlesen \uD83D\uDE05",
+        emailBody: "Hallo!\n\n"
+            + "Kennst du das? Zum hundertsten Mal dieselbe Geschichte vorlesen?\n\n"
+            + "Dreamable erstellt jedes Mal eine NEUE, personalisierte Geschichte \u2014 mit dem Namen, den Orten und den Interessen deines Kindes.\n\n"
+            + "Probier es kostenlos aus: " + DREAMABLE_URL + "?utm_source=share&utm_medium=email&utm_content=tired\n\n"
+            + "Viele Gr\u00FC\u00DFe!",
+        copyUrl: DREAMABLE_URL + "?utm_source=share&utm_medium=copy&utm_content=tired"
+      }
+    ];
   }
 
   function showToast(msg) {
@@ -80,77 +145,122 @@
     setTimeout(function(){ t.classList.remove("show"); setTimeout(function(){ t.remove(); }, 300); }, 2000);
   }
 
-  // ===== SHARE SECTION =====
-  function buildShareSection(childName) {
+  // ===== SHARE SECTION (v7: bottom sheet with variants) =====
+  function buildShareSection(childName, storyTitle) {
     var section = ce("div", { class: "dm-share" });
-    var shareText = buildShareText(childName);
-    var shareUrl = DREAMABLE_URL + "?utm_source=share";
+    var variants = buildShareVariants(childName, storyTitle);
 
+    // Main button
     var mainBtn = ce("button", { class: "dm-share-main-btn", innerHTML: ICON_SHARE_BTN + " Geschichte teilen" });
 
-    // MOBILE: native share
-    if (navigator.share) {
-      mainBtn.onclick = async function() {
-        try {
-          await navigator.share({
-            title: childName ? childName+"s magisches Abenteuer" : "Ein magisches Abenteuer",
-            text: shareText,
-            url: shareUrl
-          });
-        } catch(e) { if (e.name !== "AbortError") console.warn("[Share]", e); }
-      };
-      section.appendChild(mainBtn);
-      return section;
+    // Overlay
+    var overlay = ce("div", { class: "dm-share-sheet-overlay" });
+
+    // Bottom sheet
+    var sheet = ce("div", { class: "dm-share-sheet" });
+    sheet.appendChild(ce("div", { class: "dm-share-sheet-handle" }));
+    sheet.appendChild(ce("div", { class: "dm-share-sheet-title", textContent: "Geschichte teilen" }));
+    sheet.appendChild(ce("div", { class: "dm-share-sheet-sub", textContent: "W\u00E4hle eine Nachricht, die zu dir passt:" }));
+
+    // Selected variant state
+    var selectedVariant = null;
+    var channelRow = null;
+
+    function closeSheet() {
+      sheet.classList.remove("open");
+      overlay.classList.remove("open");
+      // Reset selection
+      selectedVariant = null;
+      sheet.querySelectorAll(".dm-share-variant").forEach(function(v) {
+        v.style.borderColor = "#eee";
+        v.style.background = "#fafafa";
+      });
+      if (channelRow) channelRow.style.display = "none";
     }
 
-    // DESKTOP: dropdown
-    var overlay = ce("div", { class: "dm-share-overlay" });
-    var dropdown = ce("div", { class: "dm-share-dropdown" });
+    overlay.onclick = closeSheet;
 
-    function close() { dropdown.classList.remove("open"); overlay.classList.remove("open"); }
-    overlay.onclick = close;
+    // Variant buttons
+    variants.forEach(function(v) {
+      var variantEl = ce("div", { class: "dm-share-variant" });
+      variantEl.appendChild(ce("span", { class: "dm-share-variant-emoji", textContent: v.emoji }));
+      var textWrap = ce("div", { class: "dm-share-variant-text" });
+      textWrap.appendChild(ce("div", { class: "dm-share-variant-label", textContent: v.label }));
+      // Preview: first 60 chars of share text
+      var preview = v.text.substring(0, 80).replace(/\n/g, " ");
+      if (v.text.length > 80) preview += "\u2026";
+      textWrap.appendChild(ce("div", { class: "dm-share-variant-preview", textContent: preview }));
+      variantEl.appendChild(textWrap);
 
-    dropdown.appendChild(ce("a", {
-      class: "dm-share-dropdown-item",
-      href: "https://wa.me/?text=" + encodeURIComponent(shareText),
-      target: "_blank", rel: "noopener",
-      innerHTML: ICON_WA + " WhatsApp",
-      onclick: function() { close(); }
-    }));
-    dropdown.appendChild(ce("a", {
-      class: "dm-share-dropdown-item",
-      href: "mailto:?subject=" + encodeURIComponent(buildEmailSubject(childName)) + "&body=" + encodeURIComponent(buildEmailBody(childName)),
-      innerHTML: ICON_EMAIL + " E-Mail",
-      onclick: function() { close(); }
-    }));
-    dropdown.appendChild(ce("button", {
-      class: "dm-share-dropdown-item",
-      innerHTML: ICON_COPY + " Link kopieren",
-      onclick: function() {
-        close();
-        navigator.clipboard.writeText(shareUrl).then(function() {
-          showToast("Link kopiert! \u2705");
-        }).catch(function() {
-          var ta = document.createElement("textarea");
-          ta.value = shareUrl; ta.style.cssText = "position:fixed;opacity:0";
-          document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
-          showToast("Link kopiert! \u2705");
+      variantEl.onclick = function() {
+        selectedVariant = v;
+        // Highlight selected
+        sheet.querySelectorAll(".dm-share-variant").forEach(function(el) {
+          el.style.borderColor = "#eee";
+          el.style.background = "#fafafa";
         });
-      }
-    }));
+        variantEl.style.borderColor = "#5856d6";
+        variantEl.style.background = "#f8f7ff";
+        // Show channel buttons
+        if (channelRow) channelRow.style.display = "flex";
+      };
 
+      sheet.appendChild(variantEl);
+    });
+
+    // Channel buttons (WhatsApp, Email, Link kopieren)
+    channelRow = ce("div", { class: "dm-share-channels", style: { display: "none" } });
+
+    // WhatsApp
+    var waBtn = ce("button", { class: "dm-share-channel-btn", innerHTML: ICON_WA + " WhatsApp" });
+    waBtn.onclick = function() {
+      if (!selectedVariant) return;
+      window.open("https://wa.me/?text=" + encodeURIComponent(selectedVariant.text), "_blank");
+      closeSheet();
+    };
+    channelRow.appendChild(waBtn);
+
+    // Email
+    var emailBtn = ce("button", { class: "dm-share-channel-btn", innerHTML: ICON_EMAIL + " E-Mail" });
+    emailBtn.onclick = function() {
+      if (!selectedVariant) return;
+      window.location.href = "mailto:?subject=" + encodeURIComponent(selectedVariant.emailSubject) + "&body=" + encodeURIComponent(selectedVariant.emailBody);
+      closeSheet();
+    };
+    channelRow.appendChild(emailBtn);
+
+    // Copy link
+    var copyBtn = ce("button", { class: "dm-share-channel-btn", innerHTML: ICON_COPY + " Link" });
+    copyBtn.onclick = function() {
+      if (!selectedVariant) return;
+      var url = selectedVariant.copyUrl;
+      navigator.clipboard.writeText(url).then(function() {
+        showToast("Link kopiert! \u2705");
+      }).catch(function() {
+        var ta = document.createElement("textarea");
+        ta.value = url; ta.style.cssText = "position:fixed;opacity:0";
+        document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+        showToast("Link kopiert! \u2705");
+      });
+      closeSheet();
+    };
+    channelRow.appendChild(copyBtn);
+
+    sheet.appendChild(channelRow);
+
+    // Main button opens sheet
     mainBtn.onclick = function() {
-      if (dropdown.classList.contains("open")) close();
-      else { dropdown.classList.add("open"); overlay.classList.add("open"); }
+      sheet.classList.add("open");
+      overlay.classList.add("open");
     };
 
     section.appendChild(overlay);
-    section.appendChild(dropdown);
+    section.appendChild(sheet);
     section.appendChild(mainBtn);
     return section;
   }
 
-  // ===== RATING SECTION =====
+  // ===== RATING SECTION (unchanged from v6) =====
   function buildRatingSection(requestId) {
     var section = ce("div", { class: "dm-rating" });
     var selectedRating = 0;
@@ -203,7 +313,8 @@
   }
 
   // ===== INJECTION (called by showStory) =====
-  function injectShareAndRating(worldKey, childName, requestId) {
+  // v7: added storyTitle parameter
+  function injectShareAndRating(worldKey, childName, requestId, storyTitle) {
     var cid = "dm-share-rating-global";
     var old = document.getElementById(cid); if (old) old.remove();
     var ss = document.getElementById("state-story"); if (!ss) return;
@@ -212,7 +323,7 @@
     ss.appendChild(container);
 
     var wrapper = ce("div", { class: "dm-share-rating" });
-    wrapper.appendChild(buildShareSection(childName));
+    wrapper.appendChild(buildShareSection(childName, storyTitle));
     wrapper.appendChild(ce("hr", { class: "dm-divider" }));
     wrapper.appendChild(buildRatingSection(requestId));
     container.appendChild(wrapper);
@@ -223,10 +334,10 @@
       if (getComputedStyle(p).overflow === "hidden") p.style.overflow = "visible";
       p = p.parentElement;
     }
-    console.log("[ShareRating] v6 injected");
+    console.log("[ShareRating] v7 injected", { worldKey: worldKey, childName: childName, storyTitle: storyTitle });
   }
 
-  // Register globally - that's all! No polling, no observer.
+  // Register globally
   window.__dreamableInjectShareRating = injectShareAndRating;
-  console.log("[ShareRating] v6 ready (passive)");
+  console.log("[ShareRating] v7 ready (passive)");
 })();
